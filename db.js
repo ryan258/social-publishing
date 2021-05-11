@@ -7,5 +7,5 @@ mongodb.connect(process.env.CONNECTIONSTRING, { useNewUrlParser: true, useUnifie
   module.exports = client.db()
   // now this won't even fire up until the db has been exported, which means it can be accessed from anywhere we require it within the app
   const app = require('./app')
-  app.listen(3000)
+  app.listen(process.env.PORT)
 })
