@@ -1,3 +1,5 @@
+const usersCollection = require('../db').collection('users')
+// ^^ now we can perform CRUD operations on this collection
 const validator = require('validator')
 // user blueprint / constructor function
 let User = function (data) {
@@ -61,6 +63,9 @@ User.prototype.register = function () {
   this.validate()
   // Step #2: Only if there are no validation errors
   // then save the user data into a database
+  if (!this.errors.length) {
+    usersCollection.insertOne(this.data)
+  }
 }
 
 module.exports = User
