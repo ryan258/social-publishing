@@ -42,7 +42,9 @@ exports.register = function (req, res) {
 // this is the function that will get called when someone visits the baseURL
 exports.home = function (req, res) {
   if (req.session.user) {
-    res.send('Welcome to the actual application!')
+    res.render('home-dashboard', {
+      username: req.session.user.username
+    })
   } else {
     res.render('home-guest')
   }

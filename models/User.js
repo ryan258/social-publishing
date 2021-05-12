@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 // ^^ for hashing passwords
-const usersCollection = require('../db').collection('users')
+const usersCollection = require('../db').db().collection('users')
 // ^^ now we can perform CRUD operations on this collection
 const validator = require('validator')
 // user blueprint / constructor function
