@@ -13,15 +13,24 @@ exports.login = function (req, res) {
         // this info will be unique to this specific user
         username: user.data.username,
         favColor: 'blue'
-      }
-      res.send(result)
+      } // since updating data in a db is asynchronous action we can't guarantee timing
+      // res.send(result)
+      req.session.save(function () {
+        // what we want to run when the save is complete
+        res.redirect('/')
+      })
     })
     .catch(function (e) {
       res.send(e)
     })
 }
 
-exports.logout = function () {}
+exports.logout = function (req, res) {
+  req.session.destroy(function () {
+    res.redirect('/')
+  })
+  // res.send('You are now logged out ')
+}
 
 exports.register = function (req, res) {
   // console.log(req.body)
