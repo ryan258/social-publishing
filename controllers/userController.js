@@ -1,6 +1,12 @@
 const User = require('../models/User')
 
-exports.login = function () {}
+exports.login = function (req, res) {
+  // let's create a new user obj, passing it login form data
+  let user = new User(req.body)
+  user.login(function (result) {
+    res.send(result)
+  })
+}
 
 exports.logout = function () {}
 

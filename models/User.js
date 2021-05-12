@@ -57,6 +57,23 @@ User.prototype.validate = function () {
   }
 }
 
+User.prototype.login = function (callback) {
+  this.cleanUp()
+  // vvv perform CRUD operations on this collection
+  // - arg0 - what we're trying to find
+  // - arg1 - callback function
+  //   if a user is found it'll pass it as attempted user
+  usersCollection.findOne({ username: this.data.username }, (err, attemptedUser) => {
+    if (attemptedUser && attemptedUser.password == this.data.password) {
+      // console.log('congrats! ')
+      callback('congrats!')
+    } else {
+      // console.log('invalid user/password')
+      callback('invalid user/password')
+    }
+  })
+}
+
 User.prototype.register = function () {
   // Step #1: Validate user data
   this.cleanUp()
