@@ -9,6 +9,11 @@ exports.login = function (req, res) {
   user
     .login()
     .then(function (result) {
+      req.session.user = {
+        // this info will be unique to this specific user
+        username: user.data.username,
+        favColor: 'blue'
+      }
       res.send(result)
     })
     .catch(function (e) {
@@ -36,5 +41,9 @@ exports.register = function (req, res) {
 
 // this is the function that will get called when someone visits the baseURL
 exports.home = function (req, res) {
-  res.render('home-guest')
+  if (req.session.user) {
+    res.send('Welcome to the actual application!')
+  } else {
+    res.render('home-guest')
+  }
 }
