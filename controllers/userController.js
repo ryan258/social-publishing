@@ -21,7 +21,14 @@ exports.login = function (req, res) {
       })
     })
     .catch(function (e) {
-      res.send(e)
+      // res.send(e)
+      // - arg0 - array of error messages to build on to
+      // - arg1 - actual message you want to add on to the array
+      //   in this case e = the message it rejects with
+      req.flash('errors', e)
+      req.session.save(function () {
+        res.redirect('/')
+      })
     })
 }
 
@@ -55,6 +62,6 @@ exports.home = function (req, res) {
       username: req.session.user.username
     })
   } else {
-    res.render('home-guest')
+    res.render('home-guest', { errors: req.flash('errors') })
   }
 }
