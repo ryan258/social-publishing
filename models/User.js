@@ -57,20 +57,30 @@ User.prototype.validate = function () {
   }
 }
 
-User.prototype.login = function (callback) {
-  this.cleanUp()
-  // vvv perform CRUD operations on this collection
-  // - arg0 - what we're trying to find
-  // - arg1 - callback function
-  //   if a user is found it'll pass it as attempted user
-  usersCollection.findOne({ username: this.data.username }, (err, attemptedUser) => {
-    if (attemptedUser && attemptedUser.password == this.data.password) {
-      // console.log('congrats! ')
-      callback('congrats!')
-    } else {
-      // console.log('invalid user/password')
-      callback('invalid user/password')
-    }
+User.prototype.login = function () {
+  return new Promise((resolve, reject) => {
+    // here we can perform async operations that will take some time to complete
+    // - then when they are complete, we call either, resolve or reject
+    this.cleanUp()
+    // vvv perform CRUD operations on this collection
+    // - arg0 - what we're trying to find
+    // - arg1 - callback function
+    //   if a user is found it'll pass it as attempted user
+    //! vv this will take some time
+    usersCollection
+      .findOne({ username: this.data.username })
+      .then((attemptedUser) => {
+        if (attemptedUser && attemptedUser.password == this.data.password) {
+          // console.log('congrats! ')
+          resolve('congrats!')
+        } else {
+          // console.log('invalid user/password')
+          reject('invalid user/password')
+        }
+      })
+      .catch(function () {
+        reject('Please try again later.')
+      })
   })
 }
 
