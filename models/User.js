@@ -1,8 +1,11 @@
+// USER MODEL - good for features that rely on a user's data
+
 const bcrypt = require('bcryptjs')
 // ^^ for hashing passwords
 const usersCollection = require('../db').db().collection('users')
 // ^^ now we can perform CRUD operations on this collection
 const validator = require('validator')
+const md5 = require('md5')
 // user blueprint / constructor function
 let User = function (data) {
   // store the user data
@@ -98,7 +101,8 @@ User.prototype.login = function () {
         // - arg0 - the plain text password user is trying to login with
         // - arg1 - this attempted user's hash value
         if (attemptedUser && bcrypt.compareSync(this.data.password, attemptedUser.password)) {
-          // console.log('congrats! ')
+          this.data = attemptedUser
+          this.getAvatar()
           resolve('congrats!')
         } else {
           // console.log('invalid user/password')
@@ -130,11 +134,17 @@ User.prototype.register = function () {
       this.data.password = bcrypt.hashSync(this.data.password, salt)
       // 3 - insert the updated data into the db
       await usersCollection.insertOne(this.data)
+      // vv run after the db user creation bc you don't want to store the avatar permanently
+      this.getAvatar()
       resolve()
     } else {
       reject(this.errors)
     }
   })
+}
+
+User.prototype.getAvatar = function () {
+  this.avatar = `https://gravatar.com/avatar/${md5(this.data.email)}?s=128`
 }
 
 module.exports = User
