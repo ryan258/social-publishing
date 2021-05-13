@@ -46,13 +46,25 @@ exports.register = function (req, res) {
   let user = new User(req.body)
   // now that the user has been instantiated we can register it
   // - register is defined in the model
-  user.register()
-  // res.send("Thanks for trying to register. 👻")
-  if (user.errors.length) {
-    res.send(user.errors)
-  } else {
-    res.send('Congrats, there are no errors.')
-  }
+  // vv now that this is an async function we need to make sure to give it a chance to actually complete
+  user
+    .register()
+    .then(() => {
+      req.session.user = { username: user.data.username }
+      req.session.save(function () {
+        res.redirect('/')
+      })
+    })
+    .catch((regErrors) => {
+      // res.send(user.errors)
+      regErrors.forEach(function (error) {
+        req.flash('regErrors', error)
+      })
+      // wait for dataabse action to complete before redirecting
+      req.session.save(function () {
+        res.redirect('/')
+      })
+    })
 }
 
 // this is the function that will get called when someone visits the baseURL
@@ -62,6 +74,6 @@ exports.home = function (req, res) {
       username: req.session.user.username
     })
   } else {
-    res.render('home-guest', { errors: req.flash('errors') })
+    res.render('home-guest', { errors: req.flash('errors'), regErrors: req.flash('regErrors') })
   }
 }
