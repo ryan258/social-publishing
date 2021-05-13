@@ -19,6 +19,14 @@ app.use(sessionOptions)
 
 app.use(flash())
 
+// our custom middleware
+app.use(function (req, res, next) {
+  // locals will be an obj available within our ejs templates, so we'll make our session.user obj available
+  // saves us from habing to pass in user data to our controllers
+  res.locals.user = req.session.user
+  next()
+})
+
 const router = require('./router')
 
 app.use(express.urlencoded({ extended: false }))
