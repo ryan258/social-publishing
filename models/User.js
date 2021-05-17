@@ -3,9 +3,16 @@ const usersCollection = require('../db').db().collection('users')
 const validator = require('validator')
 const md5 = require('md5')
 
-let User = function (data) {
+let User = function (data, getAvatar) {
   this.data = data
   this.errors = []
+  if (getAvatar == undefined) {
+    getAvatar = false
+  }
+  if (getAvatar) {
+    // this method will create a hash based on the current email and generate the gravatar url
+    this.getAvatar()
+  }
 }
 
 User.prototype.cleanUp = function () {

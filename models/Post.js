@@ -2,6 +2,8 @@
 const postsCollection = require('../db').db().collection('posts')
 // vv pass it a simple string of text and it'll return it as a special ObjectID object vv
 const ObjectID = require('mongodb').ObjectID
+// vv bring in our user model so we can access the users gravatar
+const User = require('./User')
 
 // vv data is postController's req.body
 let Post = function (data, userId) {
@@ -72,9 +74,49 @@ Post.findSingleById = function (id) {
       return
     }
     // if things pass to here we have a valid id value to look up in our DB
-    let post = await postsCollection.findOne({ _id: new ObjectID(id) })
-    if (post) {
-      resolve(post)
+    // let post = await postsCollection.findOne({ _id: new ObjectID(id) })
+    //! aggregate() is great for when you need to perform multiple/complex operations - we give it an array of DB operations - and each operation is an object
+    // - toArray() returns a promise
+    let posts = await postsCollection
+      .aggregate([
+        { $match: { _id: new ObjectID(id) } },
+        // look up documents from another collection
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'author',
+            foreignField: '_id',
+            as: 'authorDocument' // mongodb will use this name when it creates a virtual field
+          }
+        },
+        {
+          // $project allows us to spell out the resulting fields we want the object to have
+          $project: {
+            title: 1,
+            body: 1,
+            createdDate: 1,
+            author: {
+              $arrayElemAt: ['$authorDocument', 0]
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    // clean up author property in each post object
+    posts = posts.map(function (post) {
+      // manipulate the current item in the array
+      post.author = {
+        username: post.author.username,
+        // bc .getAvatar() ran in User.js
+        avatar: new User(post.author, true).avatar
+      }
+      return post
+    })
+
+    if (posts.length) {
+      console.log(posts[0])
+      resolve(posts[0])
     } else {
       reject()
     }
