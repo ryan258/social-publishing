@@ -62,4 +62,23 @@ Post.prototype.create = function () {
   })
 }
 
+// a function is an obj so we can add functions to functions
+Post.findSingleById = function (id) {
+  return new Promise(async function (resolve, reject) {
+    // make sure what is entered is a string and NOT AN OBJECT
+    // -- and that it IS a VALID OBJECT ID
+    if (typeof id != 'string' || !ObjectID.isValid(id)) {
+      reject()
+      return
+    }
+    // if things pass to here we have a valid id value to look up in our DB
+    let post = await postsCollection.findOne({ _id: new ObjectID(id) })
+    if (post) {
+      resolve(post)
+    } else {
+      reject()
+    }
+  })
+}
+
 module.exports = Post

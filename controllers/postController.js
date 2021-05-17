@@ -18,3 +18,15 @@ exports.create = function (req, res) {
       res.send(errors)
     })
 }
+
+exports.viewSingle = async function (req, res) {
+  try {
+    // this .id corresponds w/ the :id in our router
+    let post = await Post.findSingleById(req.params.id)
+    // arg0 - template
+    // arg1 - data to pass to the template
+    res.render('single-post-screen', { post: post })
+  } catch (error) {
+    res.send('404 template here')
+  }
+}
