@@ -10,6 +10,9 @@ router.post('/register', userController.register)
 router.post('/login', userController.login)
 router.post('/logout', userController.logout)
 
+// profile related routes
+router.get('/profile/:username', userController.ifUserExists, userController.profilePostsScreen)
+
 // post related routes
 // - we can run multiple functions for a given route
 router.get('/create-post', userController.mustBeLoggedIn, postController.viewCreateScreen)

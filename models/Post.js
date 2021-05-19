@@ -65,43 +65,33 @@ Post.prototype.create = function () {
 }
 
 // a function is an obj so we can add functions to functions
-Post.findSingleById = function (id) {
+Post.reusablePostQuery = function (uniqueOperations) {
   return new Promise(async function (resolve, reject) {
-    // make sure what is entered is a string and NOT AN OBJECT
-    // -- and that it IS a VALID OBJECT ID
-    if (typeof id != 'string' || !ObjectID.isValid(id)) {
-      reject()
-      return
-    }
-    // if things pass to here we have a valid id value to look up in our DB
-    // let post = await postsCollection.findOne({ _id: new ObjectID(id) })
-    //! aggregate() is great for when you need to perform multiple/complex operations - we give it an array of DB operations - and each operation is an object
-    // - toArray() returns a promise
-    let posts = await postsCollection
-      .aggregate([
-        { $match: { _id: new ObjectID(id) } },
-        // look up documents from another collection
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'author',
-            foreignField: '_id',
-            as: 'authorDocument' // mongodb will use this name when it creates a virtual field
-          }
-        },
-        {
-          // $project allows us to spell out the resulting fields we want the object to have
-          $project: {
-            title: 1,
-            body: 1,
-            createdDate: 1,
-            author: {
-              $arrayElemAt: ['$authorDocument', 0]
-            }
+    let aggOperations = uniqueOperations.concat([
+      // vv this is what we'll want to have in both cases
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          as: 'authorDocument' // mongodb will use this name when it creates a virtual field
+        }
+      },
+      {
+        // $project allows us to spell out the resulting fields we want the object to have
+        $project: {
+          title: 1,
+          body: 1,
+          createdDate: 1,
+          author: {
+            $arrayElemAt: ['$authorDocument', 0]
           }
         }
-      ])
-      .toArray()
+      }
+    ])
+    //! aggregate() is great for when you need to perform multiple/complex operations - we give it an array of DB operations - and each operation is an object
+    // - toArray() returns a promise
+    let posts = await postsCollection.aggregate(aggOperations).toArray()
 
     // clean up author property in each post object
     posts = posts.map(function (post) {
@@ -113,6 +103,26 @@ Post.findSingleById = function (id) {
       }
       return post
     })
+    resolve(posts)
+  })
+}
+
+Post.findSingleById = function (id) {
+  return new Promise(async function (resolve, reject) {
+    // make sure what is entered is a string and NOT AN OBJECT
+    // -- and that it IS a VALID OBJECT ID
+    if (typeof id != 'string' || !ObjectID.isValid(id)) {
+      reject()
+      return
+    }
+
+    let posts = await Post.reusablePostQuery([
+      {
+        $match: {
+          _id: new ObjectID(id)
+        }
+      }
+    ])
 
     if (posts.length) {
       console.log(posts[0])
@@ -121,6 +131,21 @@ Post.findSingleById = function (id) {
       reject()
     }
   })
+}
+
+Post.findByAuthorId = function (authorId) {
+  return Post.reusablePostQuery([
+    {
+      $match: {
+        author: authorId
+      }
+    },
+    {
+      $sort: {
+        createdDate: -1
+      }
+    }
+  ])
 }
 
 module.exports = Post

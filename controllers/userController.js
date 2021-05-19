@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Post = require('../models/Post')
 
 exports.mustBeLoggedIn = function (req, res, next) {
   if (req.session.user) {
@@ -72,4 +73,33 @@ exports.home = function (req, res) {
   } else {
     res.render('home-guest', { errors: req.flash('errors'), regErrors: req.flash('regErrors') })
   }
+}
+
+exports.ifUserExists = function (req, res, next) {
+  User.findByUsername(req.params.username)
+    .then(function (userDocument) {
+      req.profileUser = userDocument
+      next()
+    })
+    .catch(function (error) {
+      res.render('404')
+    })
+  // next()
+}
+
+exports.profilePostsScreen = function (req, res) {
+  // ask post model for post by a certain author id
+  // we'll have this resolve with an array of posts
+  Post.findByAuthorId(req.profileUser._id)
+    .then(function (posts) {
+      res.render('profile', {
+        // data to pass into the template
+        posts: posts,
+        profileUsername: req.profileUser.username,
+        profileAvatar: req.profileUser.avatar
+      })
+    })
+    .catch(function () {
+      res.render('404')
+    })
 }
