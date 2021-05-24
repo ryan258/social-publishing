@@ -65,7 +65,7 @@ Post.prototype.create = function () {
 }
 
 // a function is an obj so we can add functions to functions
-Post.reusablePostQuery = function (uniqueOperations) {
+Post.reusablePostQuery = function (uniqueOperations, visitorId) {
   return new Promise(async function (resolve, reject) {
     let aggOperations = uniqueOperations.concat([
       // vv this is what we'll want to have in both cases
@@ -83,7 +83,10 @@ Post.reusablePostQuery = function (uniqueOperations) {
           title: 1,
           body: 1,
           createdDate: 1,
+          // in mongodb a $ in "" will let it know you're talking about an actual field
+          authorId: '$author',
           author: {
+            // this is getting us the OBJECT for the related user
             $arrayElemAt: ['$authorDocument', 0]
           }
         }
@@ -95,6 +98,9 @@ Post.reusablePostQuery = function (uniqueOperations) {
 
     // clean up author property in each post object
     posts = posts.map(function (post) {
+      // does current visitorId = authorId?
+      post.isVisitorOwner = post.authorId.equals(visitorId)
+      // ^^ now we can access post.isVisitorOwner in our EJS
       // manipulate the current item in the array
       post.author = {
         username: post.author.username,
@@ -107,7 +113,7 @@ Post.reusablePostQuery = function (uniqueOperations) {
   })
 }
 
-Post.findSingleById = function (id) {
+Post.findSingleById = function (id, visitorId) {
   return new Promise(async function (resolve, reject) {
     // make sure what is entered is a string and NOT AN OBJECT
     // -- and that it IS a VALID OBJECT ID
@@ -116,13 +122,16 @@ Post.findSingleById = function (id) {
       return
     }
 
-    let posts = await Post.reusablePostQuery([
-      {
-        $match: {
-          _id: new ObjectID(id)
+    let posts = await Post.reusablePostQuery(
+      [
+        {
+          $match: {
+            _id: new ObjectID(id)
+          }
         }
-      }
-    ])
+      ],
+      visitorId
+    )
 
     if (posts.length) {
       console.log(posts[0])

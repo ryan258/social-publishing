@@ -21,8 +21,20 @@ app.use(flash())
 
 // our custom middleware
 app.use(function (req, res, next) {
+  //! runs on every request
+
+  // make current user id available on the req object
+  // - so no matter what controller function we're in, we'll know there's a visitorId property on the request object
+  if (req.session.user) {
+    req.visitorId = req.session.user._id
+  } else {
+    req.visitorId = 0
+  }
+
+  //! make user session data available from within view templates
+
   // locals will be an obj available within our ejs templates, so we'll make our session.user obj available
-  // saves us from habing to pass in user data to our controllers
+  // saves us from having to pass in user data to our controllers
   res.locals.user = req.session.user
   next()
 })
